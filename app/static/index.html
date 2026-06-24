@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>交易截图归档</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="date-panel" aria-label="日期列表">
+        <div class="panel-heading">
+          <h1 id="accountTitle">交易截图</h1>
+          <button id="refreshBtn" class="icon-button" type="button" title="刷新">↻</button>
+        </div>
+        <nav class="account-nav" aria-label="账号切换">
+          <a href="/huaan" data-account-link="huaan">华安期货</a>
+          <a href="/shengda" data-account-link="shengda">盛达期货</a>
+        </nav>
+        <div id="dateList" class="date-list"></div>
+      </aside>
+
+      <section class="capture-panel" aria-label="截图保存">
+        <div class="toolbar">
+          <label>
+            <span>交易日期</span>
+            <input id="tradeDate" type="date" />
+          </label>
+          <label class="note-field">
+            <span>备注</span>
+            <input id="noteInput" type="text" maxlength="1000" placeholder="复盘重点、异常成交、当天状态" />
+          </label>
+          <button id="saveBtn" class="primary-button" type="button" disabled>保存截图</button>
+        </div>
+
+        <div id="pasteZone" class="paste-zone" tabindex="0">
+          <div id="emptyPreview" class="empty-preview">
+            <strong>Ctrl+V 粘贴截图</strong>
+            <span>粘贴后确认预览，再保存到当前日期</span>
+          </div>
+          <img id="previewImage" class="preview-image" alt="待保存截图预览" hidden />
+        </div>
+
+        <div id="statusLine" class="status-line" role="status"></div>
+      </section>
+
+      <section class="records-panel" aria-label="记录浏览">
+        <div class="records-header">
+          <div>
+            <h2 id="recordsTitle">当天记录</h2>
+            <p id="recordsMeta">暂无记录</p>
+          </div>
+          <button id="clearPreviewBtn" class="secondary-button" type="button" disabled>清空预览</button>
+        </div>
+        <div id="recordsList" class="records-list"></div>
+      </section>
+    </main>
+
+    <dialog id="viewerDialog" class="viewer-dialog">
+      <div class="viewer-head">
+        <div>
+          <strong id="viewerTitle">截图</strong>
+          <span id="viewerNote"></span>
+        </div>
+        <button id="closeViewerBtn" class="icon-button" type="button" title="关闭">×</button>
+      </div>
+      <img id="viewerImage" alt="交易截图大图" />
+    </dialog>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
