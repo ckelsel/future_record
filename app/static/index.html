@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>交易截图归档</title>
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/style.css?v=20260625-sound-test" />
   </head>
   <body>
     <main class="app-shell">
@@ -30,6 +30,7 @@
             <span>备注</span>
             <input id="noteInput" type="text" maxlength="1000" placeholder="复盘重点、异常成交、当天状态" />
           </label>
+          <button id="soundTestBtn" class="secondary-button" type="button">测试提示音</button>
           <button id="saveBtn" class="primary-button" type="button" disabled>保存截图</button>
         </div>
 
@@ -67,6 +68,18 @@
       <img id="viewerImage" alt="交易截图大图" />
     </dialog>
 
-    <script src="/static/app.js"></script>
+    <dialog id="reminderDialog" class="reminder-dialog">
+      <div class="reminder-body">
+        <strong id="reminderTitle">交易截图提醒</strong>
+        <p id="reminderText">今天还没有保存交易截图。</p>
+        <div class="reminder-actions">
+          <button id="reminderDismissBtn" class="secondary-button" type="button">今天不再提醒</button>
+          <button id="reminderLaterBtn" class="secondary-button" type="button">稍后提醒</button>
+          <button id="reminderGoBtn" class="primary-button" type="button">去保存</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="/static/app.js?v=20260625-sound-test"></script>
   </body>
 </html>

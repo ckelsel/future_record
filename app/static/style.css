@@ -420,6 +420,40 @@ h2 {
   background: #f8f9f7;
 }
 
+.reminder-dialog {
+  width: min(92vw, 420px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reminder-dialog::backdrop {
+  background: rgba(25, 31, 27, 0.35);
+}
+
+.reminder-body {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.reminder-body strong {
+  font-size: 18px;
+}
+
+.reminder-body p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.reminder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (max-width: 1100px) {
   .app-shell {
     grid-template-columns: 200px minmax(360px, 1fr);

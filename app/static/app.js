@@ -8,6 +8,8 @@ const state = {
   selectedDate: "",
   records: [],
   account: accountFromPath(),
+  reminderTimer: null,
+  audioContext: null,
 };
 
 const els = {
@@ -15,6 +17,7 @@ const els = {
   accountLinks: document.querySelectorAll("[data-account-link]"),
   tradeDate: document.querySelector("#tradeDate"),
   noteInput: document.querySelector("#noteInput"),
+  soundTestBtn: document.querySelector("#soundTestBtn"),
   saveBtn: document.querySelector("#saveBtn"),
   pasteZone: document.querySelector("#pasteZone"),
   emptyPreview: document.querySelector("#emptyPreview"),
@@ -31,6 +34,12 @@ const els = {
   viewerTitle: document.querySelector("#viewerTitle"),
   viewerNote: document.querySelector("#viewerNote"),
   closeViewerBtn: document.querySelector("#closeViewerBtn"),
+  reminderDialog: document.querySelector("#reminderDialog"),
+  reminderTitle: document.querySelector("#reminderTitle"),
+  reminderText: document.querySelector("#reminderText"),
+  reminderDismissBtn: document.querySelector("#reminderDismissBtn"),
+  reminderLaterBtn: document.querySelector("#reminderLaterBtn"),
+  reminderGoBtn: document.querySelector("#reminderGoBtn"),
 };
 
 function accountFromPath() {
@@ -46,6 +55,61 @@ function todayString() {
   const now = new Date();
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
+}
+
+function reminderKey(kind, date = todayString()) {
+  return `future-record:${kind}:${state.account}:${date}`;
+}
+
+function getAudioContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  if (!state.audioContext) {
+    state.audioContext = new AudioContextClass();
+  }
+  return state.audioContext;
+}
+
+async function unlockAudio() {
+  const audioContext = getAudioContext();
+  if (!audioContext || audioContext.state !== "suspended") return;
+  try {
+    await audioContext.resume();
+  } catch {
+    // Browser may block audio until a user gesture; the visual reminder still works.
+  }
+}
+
+async function playReminderSound() {
+  const audioContext = getAudioContext();
+  if (!audioContext) return false;
+  await unlockAudio();
+  if (audioContext.state !== "running") return false;
+
+  for (let index = 0; index < 3; index += 1) {
+    const start = audioContext.currentTime + index * 0.48;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(740, start);
+    oscillator.frequency.setValueAtTime(980, start + 0.12);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.35, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.32);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(start);
+    oscillator.stop(start + 0.34);
+  }
+
+  return true;
+}
+
+function isAfterReminderTime() {
+  const now = new Date();
+  return now.getHours() > 15 || (now.getHours() === 15 && now.getMinutes() >= 0);
 }
 
 function setStatus(message, tone = "neutral") {
@@ -143,6 +207,49 @@ async function loadRecords() {
   const records = await apiJson(apiPath(`/records?trade_date=${encodeURIComponent(date)}`));
   state.records = records;
   renderRecords(records);
+}
+
+async function hasTodayRecord() {
+  const today = todayString();
+  const records = await apiJson(apiPath(`/records?trade_date=${encodeURIComponent(today)}`));
+  return records.length > 0;
+}
+
+async function checkDailyReminder() {
+  if (!isAfterReminderTime()) return;
+
+  const today = todayString();
+  if (localStorage.getItem(reminderKey("dismissed", today)) === "1") return;
+
+  const snoozedUntil = Number(localStorage.getItem(reminderKey("snoozedUntil", today)) || "0");
+  if (snoozedUntil > Date.now()) return;
+
+  if (els.reminderDialog.open) return;
+  if (await hasTodayRecord()) return;
+
+  els.reminderTitle.textContent = `${ACCOUNTS[state.account]}截图提醒`;
+  els.reminderText.textContent = `现在已经 15:00 以后，${ACCOUNTS[state.account]} 今天还没有保存交易截图。`;
+  els.reminderDialog.showModal();
+  playReminderSound().catch(() => {
+    // Audio is a convenience; do not interrupt the reminder flow if it is blocked.
+  });
+}
+
+function closeReminder() {
+  if (els.reminderDialog.open) {
+    els.reminderDialog.close();
+  }
+}
+
+function startReminderTimer() {
+  if (state.reminderTimer) {
+    window.clearInterval(state.reminderTimer);
+  }
+  state.reminderTimer = window.setInterval(() => {
+    checkDailyReminder().catch((error) => {
+      setStatus(`提醒检查失败：${error.message}`, "error");
+    });
+  }, 60 * 1000);
 }
 
 function renderDates(dates) {
@@ -254,6 +361,9 @@ async function saveRecord() {
     clearPreview();
     els.noteInput.value = "";
     await Promise.all([loadDates(), loadRecords()]);
+    if (els.tradeDate.value === todayString()) {
+      closeReminder();
+    }
     setStatus("已保存。", "success");
   } catch (error) {
     els.saveBtn.disabled = false;
@@ -301,6 +411,9 @@ async function init() {
   state.selectedDate = els.tradeDate.value;
 
   document.addEventListener("paste", handlePaste);
+  document.addEventListener("pointerdown", unlockAudio, { once: true });
+  document.addEventListener("keydown", unlockAudio, { once: true });
+  document.addEventListener("paste", unlockAudio, { once: true });
   els.pasteZone.addEventListener("click", () => els.pasteZone.focus());
   els.pasteZone.addEventListener("dragover", (event) => {
     event.preventDefault();
@@ -314,6 +427,16 @@ async function init() {
   });
 
   els.saveBtn.addEventListener("click", saveRecord);
+  els.soundTestBtn.addEventListener("click", async () => {
+    els.soundTestBtn.disabled = true;
+    els.soundTestBtn.textContent = "播放中...";
+    const played = await playReminderSound();
+    setStatus(played ? "已播放测试提示音。" : "浏览器暂时拦截了声音，请再点一次测试提示音。", played ? "neutral" : "error");
+    window.setTimeout(() => {
+      els.soundTestBtn.disabled = false;
+      els.soundTestBtn.textContent = "测试提示音";
+    }, 1600);
+  });
   els.clearPreviewBtn.addEventListener("click", () => {
     clearPreview();
     setStatus("预览已清空。", "neutral");
@@ -327,8 +450,24 @@ async function init() {
   els.viewerDialog.addEventListener("click", (event) => {
     if (event.target === els.viewerDialog) closeViewer();
   });
+  els.reminderDismissBtn.addEventListener("click", () => {
+    localStorage.setItem(reminderKey("dismissed"), "1");
+    closeReminder();
+  });
+  els.reminderLaterBtn.addEventListener("click", () => {
+    localStorage.setItem(reminderKey("snoozedUntil"), String(Date.now() + 30 * 60 * 1000));
+    closeReminder();
+  });
+  els.reminderGoBtn.addEventListener("click", async () => {
+    closeReminder();
+    await selectDate(todayString());
+    els.pasteZone.focus();
+    setStatus("请粘贴今天的交易截图。", "neutral");
+  });
 
   await Promise.all([loadDates(), loadRecords()]);
+  startReminderTimer();
+  await checkDailyReminder();
   setStatus("准备就绪。", "neutral");
 }
 
