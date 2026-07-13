@@ -10,6 +10,7 @@ const state = {
   account: accountFromPath(),
   reminderTimer: null,
   audioContext: null,
+  editingRecord: null,
 };
 
 const els = {
@@ -40,6 +41,12 @@ const els = {
   reminderDismissBtn: document.querySelector("#reminderDismissBtn"),
   reminderLaterBtn: document.querySelector("#reminderLaterBtn"),
   reminderGoBtn: document.querySelector("#reminderGoBtn"),
+  noteDialog: document.querySelector("#noteDialog"),
+  noteForm: document.querySelector("#noteForm"),
+  noteDialogTitle: document.querySelector("#noteDialogTitle"),
+  noteEditInput: document.querySelector("#noteEditInput"),
+  noteCancelBtn: document.querySelector("#noteCancelBtn"),
+  noteSaveBtn: document.querySelector("#noteSaveBtn"),
 };
 
 function accountFromPath() {
@@ -311,6 +318,13 @@ function renderRecords(records) {
     const actions = document.createElement("div");
     actions.className = "record-actions";
 
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "secondary-button";
+    editBtn.textContent = "编辑备注";
+    editBtn.addEventListener("click", () => openNoteEditor(record));
+    actions.append(editBtn);
+
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "danger-button";
@@ -381,6 +395,45 @@ async function deleteRecord(record) {
     setStatus("已删除。", "success");
   } catch (error) {
     setStatus(`删除失败：${error.message}`, "error");
+  }
+}
+
+function openNoteEditor(record) {
+  state.editingRecord = record;
+  els.noteDialogTitle.textContent = `${record.trade_date} #${String(record.sequence_no).padStart(4, "0")} 备注`;
+  els.noteEditInput.value = record.note || "";
+  els.noteDialog.showModal();
+  els.noteEditInput.focus();
+  els.noteEditInput.select();
+}
+
+function closeNoteEditor() {
+  state.editingRecord = null;
+  els.noteDialog.close();
+  els.noteEditInput.value = "";
+  els.noteSaveBtn.disabled = false;
+  els.noteSaveBtn.textContent = "保存备注";
+}
+
+async function saveEditedNote() {
+  const record = state.editingRecord;
+  if (!record) return;
+
+  els.noteSaveBtn.disabled = true;
+  els.noteSaveBtn.textContent = "保存中...";
+
+  try {
+    const updatedRecord = await apiJson(apiPath(`/records/${record.id}`), {
+      method: "PATCH",
+      body: JSON.stringify({ note: els.noteEditInput.value }),
+    });
+    closeNoteEditor();
+    await loadRecords();
+    setStatus(`${updatedRecord.trade_date} #${String(updatedRecord.sequence_no).padStart(4, "0")} 备注已更新。`, "success");
+  } catch (error) {
+    els.noteSaveBtn.disabled = false;
+    els.noteSaveBtn.textContent = "保存备注";
+    setStatus(`保存备注失败：${error.message}`, "error");
   }
 }
 
@@ -463,6 +516,14 @@ async function init() {
     await selectDate(todayString());
     els.pasteZone.focus();
     setStatus("请粘贴今天的交易截图。", "neutral");
+  });
+  els.noteForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await saveEditedNote();
+  });
+  els.noteCancelBtn.addEventListener("click", closeNoteEditor);
+  els.noteDialog.addEventListener("click", (event) => {
+    if (event.target === els.noteDialog) closeNoteEditor();
   });
 
   await Promise.all([loadDates(), loadRecords()]);

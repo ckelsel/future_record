@@ -370,6 +370,8 @@ h2 {
 
 .record-actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .viewer-dialog {
@@ -448,6 +450,57 @@ h2 {
 }
 
 .reminder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.note-dialog {
+  width: min(92vw, 520px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.note-dialog::backdrop {
+  background: rgba(25, 31, 27, 0.35);
+}
+
+.note-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.note-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.note-form span {
+  font-weight: 700;
+}
+
+.note-form textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.note-form textarea:focus {
+  border-color: var(--focus);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 138, 44, 0.18);
+}
+
+.note-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;

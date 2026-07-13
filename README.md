@@ -54,7 +54,7 @@ If another device cannot connect, allow TCP port `8787` through the local firewa
 3. Press `Ctrl+V` to paste a screenshot from the clipboard.
 4. Add an optional note.
 5. Click save.
-6. Browse saved screenshots by date and delete wrong entries when needed.
+6. Browse saved screenshots by date, edit notes, and delete wrong entries when needed.
 
 After 15:00, if the current account has no screenshot saved for today, the open page shows a reminder dialog and plays three short beeps. The reminder is per account and per day.
 

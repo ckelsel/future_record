@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>交易截图归档</title>
-    <link rel="stylesheet" href="/static/style.css?v=20260625-sound-test" />
+    <link rel="stylesheet" href="/static/style.css?v=20260710-edit-note" />
   </head>
   <body>
     <main class="app-shell">
@@ -80,6 +80,19 @@
       </div>
     </dialog>
 
-    <script src="/static/app.js?v=20260625-sound-test"></script>
+    <dialog id="noteDialog" class="note-dialog">
+      <form id="noteForm" class="note-form" method="dialog">
+        <label>
+          <span id="noteDialogTitle">编辑备注</span>
+          <textarea id="noteEditInput" maxlength="1000" rows="6"></textarea>
+        </label>
+        <div class="note-actions">
+          <button id="noteCancelBtn" class="secondary-button" type="button">取消</button>
+          <button id="noteSaveBtn" class="primary-button" type="submit">保存备注</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/static/app.js?v=20260710-edit-note"></script>
   </body>
 </html>
