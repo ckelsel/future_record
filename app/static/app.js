@@ -2,6 +2,9 @@ const ACCOUNTS = {
   huaan: "华安期货",
   shengda: "盛达期货",
 };
+const REMINDER_HOUR = 15;
+const REMINDER_MINUTE = 20;
+const REMINDER_TIME_LABEL = "15:20";
 
 const state = {
   imageDataUrl: "",
@@ -114,9 +117,10 @@ async function playReminderSound() {
   return true;
 }
 
-function isAfterReminderTime() {
-  const now = new Date();
-  return now.getHours() > 15 || (now.getHours() === 15 && now.getMinutes() >= 0);
+function isAfterReminderTime(now = new Date()) {
+  return now.getHours() > REMINDER_HOUR || (
+    now.getHours() === REMINDER_HOUR && now.getMinutes() >= REMINDER_MINUTE
+  );
 }
 
 function setStatus(message, tone = "neutral") {
@@ -235,7 +239,7 @@ async function checkDailyReminder() {
   if (await hasTodayRecord()) return;
 
   els.reminderTitle.textContent = `${ACCOUNTS[state.account]}截图提醒`;
-  els.reminderText.textContent = `现在已经 15:00 以后，${ACCOUNTS[state.account]} 今天还没有保存交易截图。`;
+  els.reminderText.textContent = `现在已经 ${REMINDER_TIME_LABEL} 以后，${ACCOUNTS[state.account]} 今天还没有保存交易截图。`;
   els.reminderDialog.showModal();
   playReminderSound().catch(() => {
     // Audio is a convenience; do not interrupt the reminder flow if it is blocked.
