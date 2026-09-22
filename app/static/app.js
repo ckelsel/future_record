@@ -5,6 +5,7 @@ const ACCOUNTS = {
 const REMINDER_HOUR = 15;
 const REMINDER_MINUTE = 20;
 const REMINDER_TIME_LABEL = "15:20";
+const THEME_STORAGE_KEY = "future-record:theme";
 
 const state = {
   imageDataUrl: "",
@@ -19,6 +20,7 @@ const state = {
 const els = {
   accountTitle: document.querySelector("#accountTitle"),
   accountLinks: document.querySelectorAll("[data-account-link]"),
+  themeToggleBtn: document.querySelector("#themeToggleBtn"),
   tradeDate: document.querySelector("#tradeDate"),
   noteInput: document.querySelector("#noteInput"),
   soundTestBtn: document.querySelector("#soundTestBtn"),
@@ -71,6 +73,24 @@ function reminderKey(kind, date = todayString()) {
   return `future-record:${kind}:${state.account}:${date}`;
 }
 
+function setTheme(theme, persist = false) {
+  const normalizedTheme = theme === "light" ? "light" : "dark";
+  const nextThemeLabel = normalizedTheme === "dark" ? "浅色" : "深色";
+
+  document.documentElement.dataset.theme = normalizedTheme;
+  els.themeToggleBtn.textContent = normalizedTheme === "dark" ? "☀" : "☾";
+  els.themeToggleBtn.title = `切换到${nextThemeLabel}`;
+  els.themeToggleBtn.setAttribute("aria-label", `切换到${nextThemeLabel}`);
+
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, normalizedTheme);
+    } catch {
+      // The current page still uses the selected theme when storage is unavailable.
+    }
+  }
+}
+
 function getAudioContext() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return null;
@@ -121,6 +141,10 @@ function isAfterReminderTime(now = new Date()) {
   return now.getHours() > REMINDER_HOUR || (
     now.getHours() === REMINDER_HOUR && now.getMinutes() >= REMINDER_MINUTE
   );
+}
+
+function isWeekend(now = new Date()) {
+  return now.getDay() === 0 || now.getDay() === 6;
 }
 
 function setStatus(message, tone = "neutral") {
@@ -227,6 +251,7 @@ async function hasTodayRecord() {
 }
 
 async function checkDailyReminder() {
+  if (isWeekend()) return;
   if (!isAfterReminderTime()) return;
 
   const today = todayString();
@@ -459,6 +484,7 @@ async function refreshAll() {
 }
 
 async function init() {
+  setTheme(document.documentElement.dataset.theme);
   els.accountTitle.textContent = ACCOUNTS[state.account];
   for (const link of els.accountLinks) {
     link.classList.toggle("active", link.dataset.accountLink === state.account);
@@ -484,6 +510,10 @@ async function init() {
   });
 
   els.saveBtn.addEventListener("click", saveRecord);
+  els.themeToggleBtn.addEventListener("click", () => {
+    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme, true);
+  });
   els.soundTestBtn.addEventListener("click", async () => {
     els.soundTestBtn.disabled = true;
     els.soundTestBtn.textContent = "播放中...";

@@ -56,7 +56,7 @@ If another device cannot connect, allow TCP port `8787` through the local firewa
 5. Click save.
 6. Browse saved screenshots by date, edit notes, and delete wrong entries when needed.
 
-After 15:20, if the current account has no screenshot saved for today, the open page shows a reminder dialog and plays three short beeps. The reminder is per account and per day.
+From Monday through Friday, after 15:20, if the current account has no screenshot saved for today, the open page shows a reminder dialog and plays three short beeps. The reminder is per account and per day; no reminder is shown on Saturday or Sunday.
 
 Screenshots and the SQLite database are stored under `data/`. Deleting a record is a soft delete: the row is hidden by default, but the database keeps the deletion timestamp.
 

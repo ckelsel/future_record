@@ -1,17 +1,29 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>交易截图归档</title>
-    <link rel="stylesheet" href="/static/style.css?v=20260710-edit-note" />
+    <script>
+      try {
+        if (localStorage.getItem("future-record:theme") === "light") {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch {
+        // Keep the default dark theme when storage is unavailable.
+      }
+    </script>
+    <link rel="stylesheet" href="/static/style.css?v=20260827-dark-theme" />
   </head>
   <body>
     <main class="app-shell">
       <aside class="date-panel" aria-label="日期列表">
         <div class="panel-heading">
           <h1 id="accountTitle">交易截图</h1>
-          <button id="refreshBtn" class="icon-button" type="button" title="刷新">↻</button>
+          <div class="panel-heading-actions">
+            <button id="themeToggleBtn" class="icon-button" type="button" title="切换到浅色" aria-label="切换到浅色">☀</button>
+            <button id="refreshBtn" class="icon-button" type="button" title="刷新" aria-label="刷新">↻</button>
+          </div>
         </div>
         <nav class="account-nav" aria-label="账号切换">
           <a href="/huaan" data-account-link="huaan">华安期货</a>
@@ -93,6 +105,6 @@
       </form>
     </dialog>
 
-    <script src="/static/app.js?v=20260813-reminder-1520"></script>
+    <script src="/static/app.js?v=20260827-dark-theme"></script>
   </body>
 </html>
