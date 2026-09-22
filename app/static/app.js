@@ -5,6 +5,7 @@ const ACCOUNTS = {
 const REMINDER_HOUR = 15;
 const REMINDER_MINUTE = 20;
 const REMINDER_TIME_LABEL = "15:20";
+const DAILY_REFRESH_HOUR = 15;
 const THEME_STORAGE_KEY = "future-record:theme";
 
 const state = {
@@ -13,6 +14,7 @@ const state = {
   records: [],
   account: accountFromPath(),
   reminderTimer: null,
+  dailyRefreshTimer: null,
   audioContext: null,
   editingRecord: null,
 };
@@ -63,8 +65,7 @@ function apiPath(path) {
   return `/api/accounts/${state.account}${path}`;
 }
 
-function todayString() {
-  const now = new Date();
+function todayString(now = new Date()) {
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
 }
@@ -271,6 +272,15 @@ async function checkDailyReminder() {
   });
 }
 
+function millisecondsUntilDailyRefresh(now = new Date()) {
+  const nextRefresh = new Date(now);
+  nextRefresh.setHours(DAILY_REFRESH_HOUR, 0, 0, 0);
+  if (nextRefresh <= now) {
+    nextRefresh.setDate(nextRefresh.getDate() + 1);
+  }
+  return nextRefresh.getTime() - now.getTime();
+}
+
 function closeReminder() {
   if (els.reminderDialog.open) {
     els.reminderDialog.close();
@@ -286,6 +296,23 @@ function startReminderTimer() {
       setStatus(`提醒检查失败：${error.message}`, "error");
     });
   }, 60 * 1000);
+}
+
+function startDailyRefreshTimer(now = new Date()) {
+  if (state.dailyRefreshTimer) {
+    window.clearTimeout(state.dailyRefreshTimer);
+  }
+  state.dailyRefreshTimer = window.setTimeout(async () => {
+    const today = todayString();
+    try {
+      await selectDate(today);
+      setStatus(`已自动切换到今天（${today}）。`, "neutral");
+    } catch (error) {
+      setStatus(`自动刷新失败：${error.message}`, "error");
+    } finally {
+      startDailyRefreshTimer();
+    }
+  }, millisecondsUntilDailyRefresh(now));
 }
 
 function renderDates(dates) {
@@ -562,6 +589,7 @@ async function init() {
 
   await Promise.all([loadDates(), loadRecords()]);
   startReminderTimer();
+  startDailyRefreshTimer();
   await checkDailyReminder();
   setStatus("准备就绪。", "neutral");
 }

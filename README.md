@@ -58,6 +58,8 @@ If another device cannot connect, allow TCP port `8787` through the local firewa
 
 From Monday through Friday, after 15:20, if the current account has no screenshot saved for today, the open page shows a reminder dialog and plays three short beeps. The reminder is per account and per day; no reminder is shown on Saturday or Sunday.
 
+If the page stays open, it automatically switches the selected trading date to today and refreshes the date and record lists once at 15:00 each day.
+
 Screenshots and the SQLite database are stored under `data/`. Deleting a record is a soft delete: the row is hidden by default, but the database keeps the deletion timestamp.
 
 Set `FUTURE_RECORD_DATA_DIR=/some/path` before running if you want to store data somewhere else.
